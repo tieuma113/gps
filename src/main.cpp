@@ -9,21 +9,37 @@ bool askForLocation();
 void sendIt(String atCommand);
 String receiveIt();
 String checkGPSLocation();
+void GPSsetup();
 
 
 
 
 void setup() {
   // put your setup code here, to run once:
+  GPSsetup();
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  
+  if (askForLocation()){
+    Serial.println(kinhDo);
+    Serial.println(viDo);
+  }else{
+    Serial.println("fail");
+  }
 }
 
 
-
+void GPSsetup() {
+  BG95.begin(115200);
+  while(!BG95.available());
+  Serial.begin(9600);
+  while(Serial.available());
+  sendIt("AT+QGPSCFG=\"outport\",\"uartnmea\"");
+  Serial.println(receiveIt());
+  sendIt("AT+QGPS=1");
+  Serial.println(receiveIt());
+}
 
 
 bool askForLocation(){
@@ -37,7 +53,6 @@ bool askForLocation(){
   }else{
     return false;
   }
-
 }
 
 void sendIt ( String atCommand ) 
