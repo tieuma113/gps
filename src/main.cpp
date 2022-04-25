@@ -44,7 +44,7 @@ void GPSsetup() {
 
 bool askForLocation(){
   String receivedMessage;
-  sendIt("AT+QGPSLOC=0");
+  sendIt("AT+QGPSLOC=0,360");
   String received = checkGPSLocation();
   if (received.length() > 0) {
     viDo = received.substring(0, received.indexOf(","));
@@ -62,7 +62,7 @@ void sendIt ( String atCommand )
 }
 
 String checkGPSLocation(){
-  int timeOut = 300;					// From BG96 Quectel AT Commands Manual
+  int timeOut = 360;					// From BG95 Quectel AT Commands Manual
 	String response;
 	String received = "";
 	bool ok = false;
@@ -83,7 +83,7 @@ String receiveIt ( )
 {
 	String received;
 
-	// Save data received from BG96 module
+	// Save data received from BG95 module
 	while (BG95.available()) {
 		received += (char)BG95.read ();
 	}
