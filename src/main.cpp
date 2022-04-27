@@ -1,9 +1,13 @@
 #include <Arduino.h>
 #include <string.h>
+#include <LiquidCrystal_I2C.h>
+#include <Wire.h>
 
-using namespace std;
+#define   BACKLIGHT_PIN  5
+LiquidCrystal_I2C lcd(0x27,16,2);
 
 #define BG95    Serial2
+#define DEBUG   Serial
 
 String kinhDo, viDo;
 
@@ -19,17 +23,31 @@ bool checkRespForOk( int timeOut ) ;
 
 void setup() {
   // put your setup code here, to run once:
+  lcd.init();                      // initialize the lcd 
+  lcd.backlight();
+  lcd.print("GPS"); 
+  DEBUG.begin(9600);
+  while(!DEBUG.available());
+  DEBUG.println("Start");
   GPSsetup();
-
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  lcd.clear();
   if (askForLocation()){
-    Serial.println("kinh do = " + kinhDo);
-    Serial.println("Vi do = "+ viDo);
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.println("kd = " + kinhDo);
+    lcd.setCursor(0,1);
+    lcd.println("Vd = "+ viDo);
+    DEBUG.println("kinh do = " + kinhDo);
+    DEBUG.println("Vi do = "+ viDo);
   }else{
-    Serial.println("fail");
+    lcd.clear();
+    lcd.setCursor(0,0);
+    lcd.println("fail");
+    DEBUG.println("fail");
   }
   // bool flag = false;
   // while(!flag){
@@ -41,7 +59,6 @@ void loop() {
   // sendIt("AT+QGPSLOC=0,36");
   // String data = checkGPSLocation();
   // Serial.println(data);
-  Serial.println("++++++++++++++");
   // sendIt("AT+QGPSLOC=0,36");
   // String data = receiveIt();
   // Serial.println(data);
@@ -54,24 +71,35 @@ void GPSsetup() {
   bool flag = false;
   BG95.begin(115200);
   while(!BG95.available());
-  Serial.begin(9600);
-  while(Serial.available());
+  // Serial.begin(9600);
+  // while(Serial.available());
   while(!flag){
     sendIt("AT");
     flag = checkRespForOk(30);
-    Serial.println("reconnect");
+    if (!flag){
+      DEBUG.println("AT");
+      DEBUG.println("sending");
+    }
   }
   flag = false;
   while(!flag){
     sendIt("AT+QGPSCFG=\"outport\",\"uartnmea\"");
     flag = checkRespForOk(30);
-    Serial.println("reconnect");
+    if (!flag){
+      DEBUG.println("AT+QGPSCFG=");
+      DEBUG.println("sending");
+    }
   }
   flag = false;
   while(!flag){
     sendIt("AT+QGPS=1");
     flag = checkRespForOk(30);
-    Serial.println("reconnect");
+    if (!flag){
+      sendIt("AT+QGPSEND");
+
+      DEBUG.println("AT+QGPS=1");
+      DEBUG.println("sending");
+    }
   }
 }
 
@@ -136,7 +164,6 @@ bool checkRespForOk( int timeOut )
 	// Check every char string received for "OK" response
 	while ( !error && !ok && ((millis()-startTime) <= (unsigned long) timeOut) ) {
 		response += receiveIt();
-    Serial.println(response);
 		ok = (response.indexOf("\r\nOK\r\n") >= 0);	// Check if "OK" is in the response
 		error = (response.indexOf("\r\nERROR\r\n") >= 0);	// Check if "ERROR" is in response
 	}
